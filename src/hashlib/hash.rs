@@ -158,12 +158,12 @@ impl HashTable {
 
 
     // SHA1 version
-    fn sha1<R: BufRead>(&self, reader: &mut R) -> Result<String> {
+    fn sha1<R: BufRead>(&self, _reader: &mut R) -> Result<String> {
         todo!();
     }
 
     // MD5 version
-    fn md5<R: BufRead>(&self, reader: &mut R) -> Result<String> {
+    fn md5<R: BufRead>(&self, _reader: &mut R) -> Result<String> {
         todo!();
     }
 
