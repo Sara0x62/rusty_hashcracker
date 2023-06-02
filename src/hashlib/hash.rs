@@ -18,7 +18,13 @@ pub struct HashTable {
 
 impl HashTable {
     pub fn new(filename: String, input: String, salt: Option<String>) -> HashTable {
-        let hash_type = HashType::try_from(input.len() * 4).unwrap(); // Bytes to bits -> x4
+        let hash_type = match HashType::try_from(input.len() * 4) { // Bytes to bits -> x4
+            Ok(x) => x,
+            Err(e) => {
+                println!("Error: {}", e);
+                std::process::exit(1);
+            }
+        };
 
         HashTable {
             wordlist_file: filename,
@@ -32,7 +38,8 @@ impl HashTable {
         let file = match File::open(&self.wordlist_file) {
             Ok(file) => file,
             Err(err) => {
-                panic!("{}", err);
+                println!("Error: {}", err);
+                std::process::exit(1);
             }
         };
 
