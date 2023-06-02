@@ -68,6 +68,7 @@ impl HashTable {
             tmp_hash = format!("{:x}", Sha256::digest(line.as_bytes()));
 
             if self.hash_input == tmp_hash {
+                println!("\n[!] Found after {} attempts", counter);
                 return Ok(line);
             }
 
