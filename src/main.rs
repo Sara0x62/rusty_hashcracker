@@ -1,11 +1,35 @@
-use std::error::Error;
+use hashlib::hash::HashTable;
+use clap::Parser;
 
-mod hash_types;
-mod hash_table;
+#[derive(Debug, Parser)]
+#[command(author, version, about)]
+struct Args {
+    #[arg()]
+    hash: String,
 
-use crate::hash_table::*;
+    #[arg(short, long, default_value = "wordlist.txt" )]
+    wordlist: String,
 
+    #[arg(short, long, default_value = None)]
+    salt: Option<String>,
+}
 
+fn main() {
+    let args = Args::parse();
+
+    let table = HashTable::new(args.wordlist, args.hash, args.salt);
+
+    println!("[*] Detected hash type: {:?}", table.hash_type);
+
+    println!("[*] Attempting to bruteforce...");
+    println!("[*]  - Provided wordlist: {:?}", table.wordlist_file);
+
+    let result = table.bruteforce();
+
+    println!("\n[*] Result: {:?}", result.unwrap());
+}
+
+/*
 fn main() -> Result<(), Box<dyn Error>> {
 
     // TODO: Get rid of hardcoded here
@@ -26,3 +50,4 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+*/

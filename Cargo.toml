@@ -6,4 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+clap = { version = "4.3.1", features = ["derive"] }
 sha2 = "0.10.6"
+thiserror = "1.0.40"
+
+[lib]
+name = "hashlib"
+path = "src/hashlib/lib.rs"
+src = "src/hashlib/lib.rs"
+
+[[bin]]
+name = "hash_cracker"
+src = "src/main.rs"
