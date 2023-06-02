@@ -1,4 +1,5 @@
 use hashlib::hash::HashTable;
+use hashlib::util::*;
 use clap::Parser;
 
 #[derive(Debug, Parser)]
@@ -19,7 +20,7 @@ fn main() {
 
     let table = HashTable::new(args.wordlist, args.hash, args.salt);
 
-    println!("[*] Detected hash type: {:?}", table.hash_type);
+    println!("[*] Detected hash type: {}{:?}{}", BOLD_ON, table.hash_type, ATTRIBUES_OFF);
 
     println!("[*] Attempting to bruteforce...");
     println!("[*]  - Provided wordlist: {:?}", table.wordlist_file);

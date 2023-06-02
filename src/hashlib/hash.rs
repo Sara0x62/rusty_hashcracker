@@ -1,12 +1,10 @@
-use sha2::{Digest, Sha256};
+use sha2::{Digest, Sha256, Sha224, Sha384, Sha512};
 
-use crate::{hash_types::HashType, errors::HashError};
+use crate::{hash_types::HashType, errors::HashError, util::CLEAR_LINE};
 use std::{fs::File, io::{BufReader, BufRead, Write}};
 
 // Return alias
 pub type Result<T> = std::result::Result<T, HashError>;
-
-const CLEAR_LINE: &'static str = "\x1B[2K";
 
 // Main struct
 pub struct HashTable {
@@ -63,7 +61,27 @@ impl HashTable {
 
     // SHA2 versions
     fn sha224<R: BufRead>(&self, reader: &mut R) -> Result<String> {
-        todo!();
+        let mut tmp_hash: String;
+        let mut counter: u64 = 0;
+
+        for line in reader.lines() {
+            let line = line.unwrap_or_default();
+            tmp_hash = format!("{:x}", Sha224::digest(line.as_bytes()));
+
+            if self.hash_input == tmp_hash {
+                println!("\n[!] Found after {} attempts", counter);
+                return Ok(line);
+            }
+
+            if counter % 50_000 == 0 {
+                print!("{}\r[*] Attempts [{}] - {}", CLEAR_LINE, counter, line);
+                _ = std::io::stdout().flush();
+            }
+
+            counter += 1;
+        }
+
+        Err(HashError::NoMatchFound(self.hash_input.clone()))
     }
 
     fn sha256<R: BufRead>(&self, reader: &mut R) -> Result<String> {
@@ -91,11 +109,51 @@ impl HashTable {
     }
     
     fn sha384<R: BufRead>(&self, reader: &mut R) -> Result<String> {
-        todo!();
+        let mut tmp_hash: String;
+        let mut counter: u64 = 0;
+
+        for line in reader.lines() {
+            let line = line.unwrap_or_default();
+            tmp_hash = format!("{:x}", Sha384::digest(line.as_bytes()));
+
+            if self.hash_input == tmp_hash {
+                println!("\n[!] Found after {} attempts", counter);
+                return Ok(line);
+            }
+
+            if counter % 50_000 == 0 {
+                print!("{}\r[*] Attempts [{}] - {}", CLEAR_LINE, counter, line);
+                _ = std::io::stdout().flush();
+            }
+
+            counter += 1;
+        }
+
+        Err(HashError::NoMatchFound(self.hash_input.clone()))
     }
     
     fn sha512<R: BufRead>(&self, reader: &mut R) -> Result<String> {
-        todo!();
+        let mut tmp_hash: String;
+        let mut counter: u64 = 0;
+
+        for line in reader.lines() {
+            let line = line.unwrap_or_default();
+            tmp_hash = format!("{:x}", Sha512::digest(line.as_bytes()));
+
+            if self.hash_input == tmp_hash {
+                println!("\n[!] Found after {} attempts", counter);
+                return Ok(line);
+            }
+
+            if counter % 50_000 == 0 {
+                print!("{}\r[*] Attempts [{}] - {}", CLEAR_LINE, counter, line);
+                _ = std::io::stdout().flush();
+            }
+
+            counter += 1;
+        }
+
+        Err(HashError::NoMatchFound(self.hash_input.clone()))
     }
 
 
