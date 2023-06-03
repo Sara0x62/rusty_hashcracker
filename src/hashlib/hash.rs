@@ -82,7 +82,7 @@ impl HashTable {
             let mut line = line.unwrap_or_default();
 
             // Salt support right now is simply Hash(text + salt).
-            line.push_str(self.salt.as_ref().unwrap_or(&EMPTY).as_str());
+            line.push_str(self.salt.as_ref().unwrap_or(&EMPTY.to_string()).as_str());
             tmp_hash = format!("{:x}", Hasher::digest(line.as_bytes()));
 
             // Compare hashes
@@ -113,7 +113,7 @@ impl HashTable {
             let mut line = line.unwrap_or_default();
 
             // Salt support right now is simply Hash(text + salt).
-            line.push_str(self.salt.as_ref().unwrap_or(&EMPTY).as_str());
+            line.push_str(self.salt.as_ref().unwrap_or(&EMPTY.to_string()).as_str());
             tmp_hash = format!("{:x}", md5::compute(line.as_bytes()));
 
             if self.hash_input == tmp_hash {
