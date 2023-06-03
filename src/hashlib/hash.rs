@@ -1,9 +1,16 @@
-use sha1::Sha1;
-use sha2::{Digest, Sha256, Sha224, Sha384, Sha512};
+// Crypto crates
 use md5;
+use sha1::Sha1;
+use sha2::{Digest, Sha224, Sha256, Sha384, Sha512};
 
-use crate::{hash_types::HashType, errors::HashError, util::CLEAR_LINE};
-use std::{fs::File, io::{BufReader, BufRead, Write}};
+// Local crate
+use crate::{errors::HashError, hash_types::HashType, util::*};
+
+// std imports
+use std::{
+    fs::File,
+    io::{BufRead, BufReader, Write},
+};
 
 // Return alias
 pub type Result<T> = std::result::Result<T, HashError>;
@@ -13,12 +20,15 @@ pub struct HashTable {
     pub wordlist_file: String,
     pub hash_input: String,
     pub hash_type: HashType,
-    pub salt: Option<String>,   // TODO: Implement salt
+    pub salt: Option<String>,
 }
+
 
 impl HashTable {
     pub fn new(filename: String, input: String, salt: Option<String>) -> HashTable {
-        let hash_type = match HashType::try_from(input.len() * 4) { // Bytes to bits -> x4
+        // Get hash type, exit if given hash is not valid
+        // Bytes to bits -> x4
+        let hash_type = match HashType::try_from(input.len() * 4) {
             Ok(x) => x,
             Err(e) => {
                 println!("Error: {}", e);
@@ -35,6 +45,7 @@ impl HashTable {
     }
 
     pub fn bruteforce(&self) -> Result<String> {
+        // Open file; exit if error occurs
         let file = match File::open(&self.wordlist_file) {
             Ok(file) => file,
             Err(err) => {
@@ -47,24 +58,22 @@ impl HashTable {
         let result;
 
         match self.hash_type {
-            HashType::MD5 => result = self.md5(&mut reader),
-            HashType::SHA1 => result = self.sha::<_, Sha1>(&mut reader),
+            HashType::MD5 =>    result = self.md5(&mut reader),
+            HashType::SHA1 =>   result = self.sha::<_, Sha1>(&mut reader),
             HashType::SHA224 => result = self.sha::<_, Sha224>(&mut reader),
             HashType::SHA256 => result = self.sha::<_, Sha256>(&mut reader),
             HashType::SHA384 => result = self.sha::<_, Sha384>(&mut reader),
             HashType::SHA512 => result = self.sha::<_, Sha512>(&mut reader),
         }
 
-        match result {
-            Ok(result) => Ok(result),
-            Err(_) => Err(HashError::NoMatchFound(self.hash_input.clone()))
-        }
+        // Return the matching text for the hash or Err(NoMatchFound)
+        result
     }
 
-    // SHA2 versions
-    fn sha<R: BufRead, Hasher: Digest>
-        (&self, reader: &mut R ) -> Result<String> 
-        where digest::Output<Hasher>: core::fmt::LowerHex
+    // SHA1/2 versions
+    fn sha<R: BufRead, Hasher: Digest>(&self, reader: &mut R) -> Result<String>
+    where
+        digest::Output<Hasher>: core::fmt::LowerHex,
     {
         let mut tmp_hash: String;
         let mut counter: u64 = 0;
@@ -73,14 +82,16 @@ impl HashTable {
             let mut line = line.unwrap_or_default();
 
             // Salt support right now is simply Hash(text + salt).
-            line.push_str(self.salt.as_ref().unwrap_or(&String::from("")).as_str());
+            line.push_str(self.salt.as_ref().unwrap_or(&EMPTY).as_str());
             tmp_hash = format!("{:x}", Hasher::digest(line.as_bytes()));
 
+            // Compare hashes
             if self.hash_input == tmp_hash {
                 println!("\n[!] Found after {} attempts", counter);
                 return Ok(line);
             }
 
+            // Pretty print :3
             if counter % 50_000 == 0 {
                 print!("{}\r[*] Attempts [{}] - {}", CLEAR_LINE, counter, line);
                 _ = std::io::stdout().flush();
@@ -102,7 +113,7 @@ impl HashTable {
             let mut line = line.unwrap_or_default();
 
             // Salt support right now is simply Hash(text + salt).
-            line.push_str(self.salt.as_ref().unwrap_or(&String::from("")).as_str());
+            line.push_str(self.salt.as_ref().unwrap_or(&EMPTY).as_str());
             tmp_hash = format!("{:x}", md5::compute(line.as_bytes()));
 
             if self.hash_input == tmp_hash {
@@ -120,5 +131,4 @@ impl HashTable {
 
         Err(HashError::NoMatchFound(self.hash_input.clone()))
     }
-
 }
