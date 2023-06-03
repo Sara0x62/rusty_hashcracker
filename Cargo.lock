@@ -191,6 +191,7 @@ name = "hash_cracker"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "digest",
  "sha2",
  "thiserror",
 ]
