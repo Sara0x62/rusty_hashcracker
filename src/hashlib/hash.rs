@@ -1,4 +1,6 @@
+use sha1::Sha1;
 use sha2::{Digest, Sha256, Sha224, Sha384, Sha512};
+use md5;
 
 use crate::{hash_types::HashType, errors::HashError, util::CLEAR_LINE};
 use std::{fs::File, io::{BufReader, BufRead, Write}};
@@ -46,11 +48,11 @@ impl HashTable {
 
         match self.hash_type {
             HashType::MD5 => result = self.md5(&mut reader),
-            HashType::SHA1 => result = self.sha1(&mut reader),
-            HashType::SHA224 => result = self.sha2::<_, Sha224>(&mut reader ),
-            HashType::SHA256 => result = self.sha2::<_, Sha256>(&mut reader ),
-            HashType::SHA384 => result = self.sha2::<_, Sha384>(&mut reader ),
-            HashType::SHA512 => result = self.sha2::<_, Sha512>(&mut reader ),
+            HashType::SHA1 => result = self.sha::<_, Sha1>(&mut reader),
+            HashType::SHA224 => result = self.sha::<_, Sha224>(&mut reader),
+            HashType::SHA256 => result = self.sha::<_, Sha256>(&mut reader),
+            HashType::SHA384 => result = self.sha::<_, Sha384>(&mut reader),
+            HashType::SHA512 => result = self.sha::<_, Sha512>(&mut reader),
         }
 
         match result {
@@ -60,7 +62,7 @@ impl HashTable {
     }
 
     // SHA2 versions
-    fn sha2<R: BufRead, Hasher: Digest>
+    fn sha<R: BufRead, Hasher: Digest>
         (&self, reader: &mut R ) -> Result<String> 
         where digest::Output<Hasher>: core::fmt::LowerHex
     {
@@ -68,7 +70,10 @@ impl HashTable {
         let mut counter: u64 = 0;
 
         for line in reader.lines() {
-            let line = line.unwrap_or_default();
+            let mut line = line.unwrap_or_default();
+
+            // Salt support right now is simply Hash(text + salt).
+            line.push_str(self.salt.as_ref().unwrap_or(&String::from("")).as_str());
             tmp_hash = format!("{:x}", Hasher::digest(line.as_bytes()));
 
             if self.hash_input == tmp_hash {
@@ -87,14 +92,33 @@ impl HashTable {
         Err(HashError::NoMatchFound(self.hash_input.clone()))
     }
 
-    // SHA1 version
-    fn sha1<R: BufRead>(&self, _reader: &mut R) -> Result<String> {
-        todo!();
-    }
-
+    // TODO: reduce duplicate code?
     // MD5 version
-    fn md5<R: BufRead>(&self, _reader: &mut R) -> Result<String> {
-        todo!();
+    fn md5<R: BufRead>(&self, reader: &mut R) -> Result<String> {
+        let mut tmp_hash: String;
+        let mut counter: u64 = 0;
+
+        for line in reader.lines() {
+            let mut line = line.unwrap_or_default();
+
+            // Salt support right now is simply Hash(text + salt).
+            line.push_str(self.salt.as_ref().unwrap_or(&String::from("")).as_str());
+            tmp_hash = format!("{:x}", md5::compute(line.as_bytes()));
+
+            if self.hash_input == tmp_hash {
+                println!("\n[!] Found after {} attempts", counter);
+                return Ok(line);
+            }
+
+            if counter % 50_000 == 0 {
+                print!("{}\r[*] Attempts [{}] - {}", CLEAR_LINE, counter, line);
+                _ = std::io::stdout().flush();
+            }
+
+            counter += 1;
+        }
+
+        Err(HashError::NoMatchFound(self.hash_input.clone()))
     }
 
 }

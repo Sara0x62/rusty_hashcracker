@@ -29,7 +29,7 @@ impl TryFrom<usize> for HashType {
             384 => Ok(HashType::SHA384),
             512 => Ok(HashType::SHA512),
 
-            120 => Ok(HashType::MD5),
+            128 => Ok(HashType::MD5),
 
             _ => Err(HashTypeError::InvalidHashSize(t))
         }
