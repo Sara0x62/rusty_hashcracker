@@ -1,4 +1,3 @@
-use digest::FixedOutputReset;
 use sha2::{Digest, Sha256, Sha224, Sha384, Sha512};
 
 use crate::{hash_types::HashType, errors::HashError, util::CLEAR_LINE};
@@ -61,7 +60,7 @@ impl HashTable {
     }
 
     // SHA2 versions
-    fn sha2<R: BufRead, Hasher: Digest + FixedOutputReset>
+    fn sha2<R: BufRead, Hasher: Digest>
         (&self, reader: &mut R ) -> Result<String> 
         where digest::Output<Hasher>: core::fmt::LowerHex
     {
